@@ -1,0 +1,56 @@
+// RptCtrl.idl : type library source for ActiveX Control project.
+
+// This file will be processed by the MIDL compiler tool to
+// produce the type library (RptCtrl.tlb) that will become a resource in
+// RptCtrl.ocx.
+
+#include <olectl.h>
+#include <idispids.h>
+
+[ uuid(75914D81-EAB3-49B4-B4D2-0AD608589FB9), version(1.0),
+  helpfile("RptCtrl.hlp"),
+  helpstring("RptCtrl ActiveX Control module"),
+  control ]
+library RptCtrlLib
+{
+	importlib(STDOLE_TLB);
+
+	//  Primary dispatch interface for CRptCtrlCtrl
+
+	[ uuid(615E2844-9D51-45D3-94A3-A0B720803321),
+	  helpstring("Dispatch interface for RptCtrl Control")]
+	dispinterface _DRptCtrl
+	{
+		properties:
+            [id(3) , helpstring("property strExpFile")] BSTR strExpFile;
+            [id(4) , helpstring("property StrExportFileName")] BSTR StrExportFileName;
+    methods:
+
+			[id(DISPID_ABOUTBOX)] void AboutBox();
+            [id(1), helpstring("method AnalyzeExcleFile")] LONG AnalyzeExcleFile(BSTR szExcleFileName);
+            [id(2), helpstring("method AnalyzeFolder")] LONG AnalyzeFolder(BSTR szFolderName);
+    };
+
+	//  Event dispatch interface for CRptCtrlCtrl
+
+	[ uuid(E8D70003-4295-409A-B293-77655103544D),
+	  helpstring("Event interface for RptCtrl Control") ]
+	dispinterface _DRptCtrlEvents
+	{
+		properties:
+			//  Event interface has no properties
+
+		methods:
+	};
+
+	//  Class information for CRptCtrlCtrl
+
+	[ uuid(A7116AA5-99DF-4310-8840-D02869149B7D),
+	  helpstring("RptCtrl Control"), control ]
+	coclass RptCtrl
+	{
+		[default] dispinterface _DRptCtrl;
+		[default, source] dispinterface _DRptCtrlEvents;
+	};
+
+};

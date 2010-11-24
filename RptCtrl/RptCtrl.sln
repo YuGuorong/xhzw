@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RptCtrl", "RptCtrl.vcproj", "{91B9A262-D6A5-4C0E-B6C7-1AC1EB67787B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExcelRpt", "..\ExcelRpt\ExcelRpt.vcproj", "{67851BF5-ADB1-4BE8-8CA9-3F14A6A64DAE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{91B9A262-D6A5-4C0E-B6C7-1AC1EB67787B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{91B9A262-D6A5-4C0E-B6C7-1AC1EB67787B}.Debug|Win32.Build.0 = Debug|Win32
+		{91B9A262-D6A5-4C0E-B6C7-1AC1EB67787B}.Release|Win32.ActiveCfg = Release|Win32
+		{91B9A262-D6A5-4C0E-B6C7-1AC1EB67787B}.Release|Win32.Build.0 = Release|Win32
+		{67851BF5-ADB1-4BE8-8CA9-3F14A6A64DAE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{67851BF5-ADB1-4BE8-8CA9-3F14A6A64DAE}.Debug|Win32.Build.0 = Debug|Win32
+		{67851BF5-ADB1-4BE8-8CA9-3F14A6A64DAE}.Release|Win32.ActiveCfg = Release|Win32
+		{67851BF5-ADB1-4BE8-8CA9-3F14A6A64DAE}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
