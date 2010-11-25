@@ -24,23 +24,22 @@
 // http://tech.e800.com.cn/articles/2009/527/1243392027658_1.html
 // http://www.cppblog.com/sleepwom/archive/2009/10/03/97804.html
 
-COL_FLAG g_strColFlags[] = 
+LPCTSTR  g_CT_ajudge_col[]= 
 {
-    {SAMPLE_TIME,      _T("Sample Time")        },
-    {LATENCY,          _T("Latency in ms")      },
-    {PACKET_LOSS,      _T("Packet Loss (%)")    },
-    {SAMPLE_COUNT,     _T("Sample Count")       },
+    {_T("省份")},{_T("原归属城市")},{_T("原城市区号")},{_T("现归属省份")},{_T("现归属城市")},{_T("现城市区号")}
 };
-
-COL_FLAG  g_CollectIP[]= 
+LPCTSTR  g_CT_col[]= 
 {
-    {IP_SOURCE,        _T("Source Address:")},
-    {IP_DEST,          _T("Destination Address:")},
+    {_T("省份")},{_T("城市")},{_T("城市区号")}
 };
-
-LPCTSTR g_strHeaderStart[] = { _T("Report Details"),   NULL };
-LPCTSTR g_strHeaderEnd[]   = { _T("Sample Count")  ,   NULL };
-LPCTSTR g_strTableEnd[]    = { _T("Report Generated"), _T("Total Samples"),NULL };
+LPCTSTR  g_CM_col[]= 
+{    
+    {_T("省份")},{_T("城市")},{_T("区号")}
+};
+LPCTSTR  g_CNN_col[]= 
+{
+    {_T("省、直辖市")},{_T("所辖城市")},{_T("长途区号")}    
+};
 
 LPCTSTR g_strExpColumns[] = 
 {
@@ -58,30 +57,14 @@ LPCTSTR g_strExpColumns[] =
 
 PROCESS_TABLE  g_ProcTbl[] = 
 {
-    { UNINITIALIZE,      &OnInit,          NULL               }, //Got a valid cell
-    { LOOKUP_IPS,        &OnLookupIPs,     g_strHeaderStart   },
-    { LOOKUP_TBL_HEADER, &OnLookupHead,    g_strHeaderEnd     }, //Got a valid line
-    { SET_COL_INDEX,     &OnFirstDataRow,  g_strTableEnd      },
-    { LOOKUP_TBL_DATA,   &OnExpDatas,      g_strTableEnd      },
-    { LOOKUP_NEXT_TBL,   &OnLookupNextTbl, g_strHeaderStart   },
-    { SKIP_TBLE_HEADER,  &OnSkipHead,      g_strHeaderEnd     },
+    { UNINITIALIZE,      &OnInit,       NULL   }, //Got a valid cell
+    { PROC_CT_ADJ,       &OnIndexRow,   g_CT_ajudge_col   },
+    { PROC_CT_NORMAL,    &OnIndexRow,   g_CT_col   }, //Got a valid line
+    { PROC_CM_NORMAL,    &OnIndexRow,   g_CM_col   },
+    { PROC_CNN_NORMAL,   &OnIndexRow,   g_CNN_col   },
+    { PROC_EXP_DATA,     &ProcExpData,  NULL        }
+
 };
-
-INT CheckEndConditon(LPCTSTR pstrKeyWords[], CString &str)
-{
-    if( pstrKeyWords == NULL ) return 0;
-    int i=0;
-    str.TrimLeft(_T(' '));
-    str.TrimRight(_T(' '));
-
-    while( pstrKeyWords[i] )
-    {
-        if( str.Compare(pstrKeyWords[i]) == 0 )
-            return 1;
-        i++;
-    }
-    return 0;
-}
 
 INT FindNextValidColumn(VARIANT * pval, int &col_beging, int col_end)
 {
@@ -94,6 +77,43 @@ INT FindNextValidColumn(VARIANT * pval, int &col_beging, int col_end)
 }
 
 ////-------------------------------------------------------------------------------------------------------
+RPOC_STATE OnIndexRow(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
+{
+    RPOC_STATE state = UNCHANGED;
+    int col = 0; 
+    if( FindNextValidColumn(pval, col, num) )
+    {
+        if( pval[col].vt == VT_BSTR)
+        {
+            CString str = pval[col].bstrVal;
+            if(str.Compare(_T("省份")) == 0 )
+            {
+                if( pParser->cur_state == PROC_CT_ADJ )
+                {
+                    col += 3;
+                }
+            }
+            else if(str.Compare(_T("省、直辖市")) != 0 )
+            {
+                return STATE_END;
+            }
+
+            pParser->ColIndex[0] = col++;
+            pParser->ColIndex[1] = col++;
+            pParser->ColIndex[2] = col++;
+            //col = 6;
+            while(col <= num )
+            {
+                str = pval[col++].bstrVal;
+                str = str.Left(4);
+                pParser->strInfo.Add(str);
+            }
+            state = PROC_EXP_DATA;
+        }
+    }
+    return state;
+}
+
 RPOC_STATE OnInit(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
 {
     int col = 0; 
@@ -101,196 +121,51 @@ RPOC_STATE OnInit(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * 
     {
         if( pval[col].vt == VT_BSTR)
         {
-            pParser->strInfo.SetAt(CONNECT_NAME,  pval[col].bstrVal);
-        }
-        return LOOKUP_IPS;
-    }
-    return UNCHANGED;
-}
-//---------------------------------------------
-RPOC_STATE OnLookupIPs(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
-{
-    int col = 0 , nfindIp = -1; 
-    while( FindNextValidColumn(pval, col, num) )
-    {
-        if( pval[col].vt == VT_BSTR )
-        {
+            pParser->strInfo.RemoveAll();
             CString str = pval[col].bstrVal;
-            if( nfindIp >= 0 )
+            if( str.Find( _T("调整")) != -1)
             {
-                pParser->strInfo.SetAt(nfindIp, str);
+                return PROC_CT_ADJ;
             }
-
-            if( CheckEndConditon(pstrKeyWords, str) )
-                return LOOKUP_TBL_HEADER;
-            for(int j=0; j<sizeof(g_CollectIP)/sizeof(COL_FLAG);j++)
+            else if( (str.Find( _T("汇总") )!= -1 ) ||  ( str.Find( _T("新增")) != -1 ) )
             {
-                if( str.Compare(g_CollectIP[j].strFlag) == 0 )
-                {
-                    nfindIp = g_CollectIP[j].index;
-                    
-                }                
+                return PROC_CT_NORMAL;
             }
+            else 
+                return OnIndexRow(pval, num , pstrKeyWords, pParser);           
         }
+        return STATE_END;
     }
     return UNCHANGED;
 }
 //---------------------------------------------
-
-RPOC_STATE OnLookupHead(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
+RPOC_STATE ProcCtAdjTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
 {
-    int col =0 ;
-    while( FindNextValidColumn(pval, col, num) )
-    {
-        if( pval[col].vt == VT_BSTR )
-        {
-            CString str = pval[col].bstrVal;
-            if( CheckEndConditon(pstrKeyWords, str) )
-            {
-                //TODO: Export header here
-                if( pParser->nCurWriteRow == 0 )
-                {
-                    PrepareExportFile(pParser,
-                        g_strExpColumns, pParser->nExpCols);
-                }
-                TRACE(_T("Find Table, %d\n"), pParser->nCurReadRow);
-                return SET_COL_INDEX;
-            }
-        }
-    }
     return UNCHANGED;
 }
 //---------------------------------------------
-RPOC_STATE OnFirstDataRow(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
+RPOC_STATE ProcCtTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
 {
-    int col =0 , idx = 0;
-    while( FindNextValidColumn(pval, col, num) )
-    {
-        pParser->ColIndex[idx++] = col; 
-
-    }
-    if( idx )
-    {
-        pParser->nImportCols = idx;
-        OnExpDatas(pval, num, pstrKeyWords,  pParser);
-        TRACE(_T("first row: %d\n"),pParser->nCurReadRow);
-        return LOOKUP_TBL_DATA;
-    }
-    return UNCHANGED;
-}
-
-//---------------------------------------------
-RPOC_STATE OnExpDatas(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
-{
-    if( pParser->nImportCols )
-    {
-        if( pval[pParser->ColIndex[0]].vt == VT_EMPTY )
-        {
-            int col = 0; 
-            while( FindNextValidColumn(pval, col, num) )
-            {
-                if( pval[col].vt == VT_BSTR )
-                {
-                    TRACE(_T("table end %d\n"),pParser->nCurReadRow);
-                    return LOOKUP_NEXT_TBL;
-                }
-            }
-        }
-        else
-        {
-            //TODO: Export data here
-            //INT InsertRowData(RPT_PARSER *pParser, LPCTSTR szCol[], int nCols);
-            CStringArray str;
-            str.Append(pParser->strInfo);
-            int date_col = pParser->ColIndex[0];
-            if(pval[date_col].vt == VT_BSTR)
-            {
-                TCHAR szDt[64];
-                _tcsncpy_s(szDt,64, (LPCTSTR)pval[date_col].bstrVal, 63);
-                LPCTSTR szTime = _tcschr(szDt, _T(' '));
-                if( szTime)
-                {
-                    szDt[szTime-szDt] =_T('\0');
-                    str.Add(szDt);
-                    szTime++;
-                    while( *szTime && *szTime == ' ') szTime++;                    
-
-                    int h, min;
-                    TCHAR hd;
-                    if( _stscanf(szTime, _T("%d:%d%c"), &h, &min, &hd) != 0)
-                    {
-                        if( h>=12) h =0 ;
-                        if( hd == _T('P') ) h += 12;
-                        _stprintf(szDt,_T("%d:%d\0"), h, min);
-                        szTime = szDt;
-                    }
-                    str.Add(szTime);
-                }      
-                else
-                {
-                    str.Add(_T(" "));
-                    str.Add(_T(" "));
-                }
-            }
-
-            for(int i=1; i<pParser->nImportCols; i++)
-            {
-                if( pval[pParser->ColIndex[i]].vt == VT_BSTR)
-                {
-                    str.Add(pval[pParser->ColIndex[i]].bstrVal);
-                }
-                else if(pval[pParser->ColIndex[i]].vt == VT_R8 )
-                {
-                    TCHAR buff[64];
-                    _stprintf(buff, _T("%.02f"), pval[pParser->ColIndex[i]].dblVal);
-                    str.Add(buff);
-                }
-                else if( pval[pParser->ColIndex[i]].vt == VT_EMPTY)
-                {
-                    str.Add(_T(""));
-                }
-
-            }
-            InsertRowData(pParser, str);
-
-        }
-    }
     return UNCHANGED;
 }
 //---------------------------------------------
-RPOC_STATE OnLookupNextTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
+RPOC_STATE ProcCmTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
 {
-    int col = 0; 
-    while( FindNextValidColumn(pval, col, num) )
-    {
-        if( pval[col].vt == VT_BSTR )
-        {
-            CString str = pval[col].bstrVal;
-            if( CheckEndConditon(pstrKeyWords, str) )
-                return SKIP_TBLE_HEADER;
-        }
-    }
     return UNCHANGED;
 }
 //---------------------------------------------
-RPOC_STATE OnSkipHead(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
+RPOC_STATE ProcCnnTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
 {
-    int col =0 ;
-    while( FindNextValidColumn(pval, col, num) )
-    {
-        if( pval[col].vt == VT_BSTR )
-        {
-            CString str = pval[col].bstrVal;
-            if( CheckEndConditon(pstrKeyWords, str) )
-            {
-                TRACE(_T("table start %d\n"),pParser->nCurReadRow+1);
-                return LOOKUP_TBL_DATA;
-            }
-        }
-
-    }
     return UNCHANGED;
 }
+//---------------------------------------------
+RPOC_STATE ProcExpData(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
+{
+    return UNCHANGED;
+}
+
+////-------------------------------------------------------------------------------------------------------
+
 ////-------------------------------------------------------------------------------------------------------
 
 int OnReadRow(VARIANT * pval, int num, int repeat, void * param)
@@ -308,6 +183,8 @@ int OnReadRow(VARIANT * pval, int num, int repeat, void * param)
         RPOC_STATE next_statu = pTblProc->pProc(pval, num, pTblProc->pszKeyWords, pParser);
         if( next_statu != UNCHANGED )
             pParser->cur_state = next_statu;
+        if( next_statu == STATE_END )
+            return 0;
     }
     pParser->nCurReadRow++;
 

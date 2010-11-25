@@ -29,13 +29,12 @@ typedef struct tag_column_idx_string
 typedef enum tag_porcess_status
 {
     UNINITIALIZE,      /*File Opened, read CONNECT_NAME*/ 
-    LOOKUP_IPS,        /*Got CONNECT_NAME, look up IP address*/ 
-//    INITIALIZED,       /*Find All string info, look up table start*/
-    LOOKUP_TBL_HEADER, /*Find table start, read header*/
-    SET_COL_INDEX,     /*Set each export colum position index */
-    LOOKUP_TBL_DATA,   /*Find header,read table data*/    
-    LOOKUP_NEXT_TBL,   /*Table data finish, look up next table start*/ 
-    SKIP_TBLE_HEADER,  /*Table header already,Skipping header, look up table data*/
+    PROC_CT_ADJ,    
+    PROC_CT_NORMAL, 
+    PROC_CM_NORMAL, 
+    PROC_CNN_NORMAL,
+    PROC_EXP_DATA,
+    STATE_END,       
     UNCHANGED,         /*Dose not change, for call back return check*/
 }RPOC_STATE;
 
@@ -78,12 +77,11 @@ typedef RPOC_STATE (*cbProcRow)(VARIANT * pval, int num, LPCTSTR strKeyWords[], 
 #define DECLARE_PROCESS(proc)  RPOC_STATE proc(VARIANT * pval, int num, LPCTSTR strKeyWords[], RPT_PARSER * pParser);
 
 DECLARE_PROCESS(OnInit);
-DECLARE_PROCESS(OnLookupIPs);
-DECLARE_PROCESS(OnLookupHead);
-DECLARE_PROCESS(OnSkipHead);
-DECLARE_PROCESS(OnLookupNextTbl);
-DECLARE_PROCESS(OnFirstDataRow);
-DECLARE_PROCESS(OnExpDatas);
+DECLARE_PROCESS(OnIndexRow);
+DECLARE_PROCESS(ProcCtTbl   );
+DECLARE_PROCESS(ProcCmTbl   );
+DECLARE_PROCESS(ProcCnnTbl  );
+DECLARE_PROCESS(ProcExpData );
 
 typedef struct tag_process_table
 {

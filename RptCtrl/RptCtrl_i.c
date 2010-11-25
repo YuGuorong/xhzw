@@ -6,7 +6,7 @@
 
 
  /* File created by MIDL compiler version 6.00.0366 */
-/* at Sun Nov 21 15:19:10 2010
+/* at Wed Nov 24 23:45:16 2010
  */
 /* Compiler settings for .\RptCtrl.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)

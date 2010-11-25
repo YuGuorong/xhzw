@@ -1,83 +1,16 @@
-========================================================================
-    ACTIVEX CONTROL DLL : RptCtrl Project Overview
-========================================================================
+中国电信153H0H1H2H3号码段调整分配表 (2010-09-27 10:36:50)															
+省份	原归属城市	原城市区号	现归属省份	现归属城市	现城市区号	1530	1531	1532	1533	1534	1535	1536	1537	1538	1539
 
-ControlWizard has created this project for your RptCtrl ActiveX Control
-DLL, which contains 1 control.
+中国电信189H0H1H2H3号码段新增分配表 (2010-09-27 10:31:07)												
+省份	城市	城市区号	1890	1891	1892	1893	1894	1895	1896	1897	1898	1899
 
-This skeleton project not only demonstrates the basics of writing an
-ActiveX Control, but is also a starting point for writing the specific
-features of your control.
+中国电信189H0H1H2H3号码段汇总分配表 (2010-09-27 10:33:31)												
+省份	城市	城市区号	1890	1891	1892	1893	1894	1895	1896	1897	1898	1899
 
-This file contains a summary of what you will find in each of the files
-that make up your RptCtrl ActiveX Control DLL.
 
-RptCtrl.vcproj
-    This is the main project file for VC++ projects generated using an 
-    Application Wizard. It contains information about the version of 
-    Visual C++ that generated the file, and information about the platforms,
-    configurations, and project features selected with the Application Wizard.
 
-RptCtrl.h
-    This is the main include file for the ActiveX Control DLL.  It
-    includes other project-specific includes such as resource.h.
+省份	城市	区号	1340	1341	1342	1343	1344	1345	1346	1347	1348
 
-RptCtrl.cpp
-    This is the main source file that contains code for DLL initialization,
-    termination and other bookkeeping.
 
-RptCtrl.rc
-    This is a listing of the Microsoft Windows resources that the project
-    uses.  This file can be directly edited with the Visual C++ resource
-    editor.
 
-RptCtrl.def
-    This file contains information about the ActiveX Control DLL that
-    must be provided to run with Microsoft Windows.
-
-RptCtrl.idl
-    This file contains the Object Description Language source code for the
-    type library of your control.
-
-RptCtrl.ico
-    This file contains an icon that will appear in the About box.  This icon
-    is included by the main resource file RptCtrl.rc.
-
-/////////////////////////////////////////////////////////////////////////////
-CRptCtrlCtrl control:
-
-RptCtrlCtrl.h
-    This file contains the declaration of the CRptCtrlCtrl C++ class.
-
-RptCtrlCtrl.cpp
-    This file contains the implementation of the CRptCtrlCtrl C++ class.
-
-RptCtrlPropPage.h
-    This file contains the declaration of the CRptCtrlPropPage C++ class.
-
-RptCtrlPropPage.cpp
-    This file contains the implementation of the CRptCtrlPropPage C++ class.
-
-CRptCtrlCtrl.bmp
-    This file contains a bitmap that a container will use to represent the
-    CRptCtrlCtrl control when it appears on a tool palette.  This bitmap
-    is included by the main resource file RptCtrl.rc.
-
-/////////////////////////////////////////////////////////////////////////////
-Other standard files:
-
-stdafx.h, stdafx.cpp
-    These files are used to build a precompiled header (PCH) file
-    named RptCtrl.pch and a precompiled types (PCT) file named stdafx.obj.
-
-resource.h
-    This is the standard header file, which defines new resource IDs.
-    The Visual C++ resource editor reads and updates this file.
-
-/////////////////////////////////////////////////////////////////////////////
-Other notes:
-
-ControlWizard uses "TODO:" to indicate parts of the source code you
-should add to or customize.
-
-/////////////////////////////////////////////////////////////////////////////
+省、直辖市	所辖城市	长途区号	1320H1H2H3	1321H1H2H3	1322H1H2H3	1323H1H2H3	1324H1H2H3	1325H1H2H3	1326H1H2H3	1327H1H2H3	1328H1H2H3	1329H1H2H3
