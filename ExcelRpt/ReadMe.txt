@@ -1,18 +1,16 @@
-Global setup:
- Download and install Git
-  git config --global user.name "yuguorong"
-  git config --global user.email yuguorong@gmail.com
-        Next steps:
-  mkdir xhzw
-  cd xhzw
-  git init
-  touch README
-  git add README
-  git commit -m 'first commit'
-  git remote add origin git@github.com:YuGuorong/xhzw.git
-  git push origin master
-      Existing Git Repo?
-  cd existing_git_repo
-  git remote add origin git@github.com:YuGuorong/xhzw.git
-  git push origin master
-      Importing a Subversion 
+中国电信153H0H1H2H3号码段调整分配表 (2010-09-27 10:36:50)															
+省份	原归属城市	原城市区号	现归属省份	现归属城市	现城市区号	1530	1531	1532	1533	1534	1535	1536	1537	1538	1539
+
+中国电信189H0H1H2H3号码段新增分配表 (2010-09-27 10:31:07)												
+省份	城市	城市区号	1890	1891	1892	1893	1894	1895	1896	1897	1898	1899
+
+中国电信189H0H1H2H3号码段汇总分配表 (2010-09-27 10:33:31)												
+省份	城市	城市区号	1890	1891	1892	1893	1894	1895	1896	1897	1898	1899
+
+
+
+省份	城市	区号	1340	1341	1342	1343	1344	1345	1346	1347	1348
+
+
+
+省、直辖市	所辖城市	长途区号	1320H1H2H3	1321H1H2H3	1322H1H2H3	1323H1H2H3	1324H1H2H3	1325H1H2H3	1326H1H2H3	1327H1H2H3	1328H1H2H3	1329H1H2H3

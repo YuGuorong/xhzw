@@ -77,6 +77,17 @@ INT FindNextValidColumn(VARIANT * pval, int &col_beging, int col_end)
 }
 
 ////-------------------------------------------------------------------------------------------------------
+TCHAR g_chr_brk[] = {
+    _T('\0'), //UNINITIALIZE,      /*File Opened, read CONNECT_NAME*/ 
+    _T('\0'), //PROC_CT_ADJ,    
+    _T('、'), //PROC_CT_NORMAL, 
+    _T(','),  //PROC_CM_NORMAL, 
+    _T('、'), //PROC_CNN_NORMAL,
+    _T('\0'), //PROC_EXP_DATA,
+    _T('\0'), //STATE_END,       
+    _T('\0')  //UNCHANGED,         /*Dose not change, for call back return check*/
+};
+
 RPOC_STATE OnIndexRow(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
 {
     RPOC_STATE state = UNCHANGED;
@@ -92,8 +103,19 @@ RPOC_STATE OnIndexRow(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSE
                 {
                     col += 3;
                 }
+                else if( pParser->cur_state == UNINITIALIZE )
+                {
+                    pParser->cur_state = PROC_CM_NORMAL;
+                }
             }
-            else if(str.Compare(_T("省、直辖市")) != 0 )
+            else if(str.Compare(_T("省、直辖市")) == 0 )
+            {
+                if( pParser->cur_state == UNINITIALIZE )
+                {
+                    pParser->cur_state = PROC_CNN_NORMAL;
+                }
+            }
+            else
             {
                 return STATE_END;
             }
@@ -102,12 +124,15 @@ RPOC_STATE OnIndexRow(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSE
             pParser->ColIndex[1] = col++;
             pParser->ColIndex[2] = col++;
             //col = 6;
+            pParser->ColNumberStart = col;
             while(col <= num )
             {
                 str = pval[col++].bstrVal;
                 str = str.Left(4);
                 pParser->strInfo.Add(str);
             }
+            pParser->app_state = pParser->cur_state;
+            pParser->chr_brk = g_chr_brk[pParser->app_state];
             state = PROC_EXP_DATA;
         }
     }
@@ -139,28 +164,57 @@ RPOC_STATE OnInit(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * 
     return UNCHANGED;
 }
 //---------------------------------------------
-RPOC_STATE ProcCtAdjTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
+int GetPartStr(CString &strCell, CString &part, RPT_PARSER * pParser)
 {
-    return UNCHANGED;
+    //TCHAR chrbrk = 
+    int brk = strCell.Find(pParser->chr_brk);
+    if( brk != -1 )
+    {
+        part = strCell.Left(brk);
+        strCell.Delete(0, brk+1);
+        return 1;
+    }
+    return 0;
 }
-//---------------------------------------------
-RPOC_STATE ProcCtTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
+
+int ProcParseCell( VARIANT * pval, int col, RPT_PARSER * pParser)
 {
-    return UNCHANGED;
+    if( pval[col].vt == VT_BSTR)
+    {
+        CString strpart;
+        CString str = //_T("280-289、301、311、321、331、650-653、655-656");//cnn //pval[col].bstrVal;
+        _T("402-403,406-407,472-473,477,484,487");//cm
+        //_T("311-312、369、383-385、409、834");//ct
+        while( GetPartStr(str, strpart, pParser) )
+        {
+            int begin, end = -1;
+            _stscanf(str,_T("%d-%d"),&begin, &end);
+            if( end == -1) end = begin;
+            while( begin <= end)
+            {
+                
+            }
+        }
+    }    
+    return 1;
 }
-//---------------------------------------------
-RPOC_STATE ProcCmTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
-{
-    return UNCHANGED;
-}
-//---------------------------------------------
-RPOC_STATE ProcCnnTbl(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
-{
-    return UNCHANGED;
-}
-//---------------------------------------------
 RPOC_STATE ProcExpData(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
 {
+    int col = 0;
+    for( int idx = 0; idx<3; idx++)
+    {
+        pParser->ptrInfos[idx] = _T("");
+        col = pParser->ColIndex[idx];
+        if( pval[col].vt == VT_BSTR )
+        {
+            pParser->ptrInfos[idx] = pval[col].bstrVal;
+        }
+    }
+
+    for(col = pParser->ColNumberStart; col < num ; col++)
+    {
+        ProcParseCell(pval, col, pParser);
+    }
     return UNCHANGED;
 }
 
