@@ -61,7 +61,7 @@ BOOL GetDefaultXlsFileName(LPCTSTR sDirName, CString& sExcelFile)
 }
 
 CFile exp_f;
-INT PrepareExportFile(RPT_PARSER *pParser, LPCTSTR szCol[], int ncols)
+INT PrepareExportFile(RPT_PARSER *pParser, LPCTSTR szCol , int ncols)
 {
     CString strExpFile;
     GetDefaultXlsFileName(pParser->strRptDir, strExpFile);
@@ -75,7 +75,7 @@ INT PrepareExportFile(RPT_PARSER *pParser, LPCTSTR szCol[], int ncols)
         pParser->ExpSheets=pParser->ExpBook.GetSheets();
         pParser->ExpSheet=pParser->ExpSheets.GetItem(COleVariant((short)1));
         
-        InsertRowData(pParser, szCol,ncols);
+        //InsertRowData(pParser, szCol,ncols);
         
         pParser->ExpBook.SaveAs(COleVariant(strExpFile),covOptional,
             covOptional,covOptional,
@@ -89,14 +89,17 @@ INT PrepareExportFile(RPT_PARSER *pParser, LPCTSTR szCol[], int ncols)
     {
         if( exp_f.Open(strExpFile, CFile::modeReadWrite|CFile::modeCreate) )
         {
-            InsertRowData(pParser, szCol,ncols);
-        }        
-        return 1;
+            pParser->handle_export = &exp_f;
+            return 1;
+        }                
     }
+    return -1;
     
 }
 
-INT InsertRowData(RPT_PARSER *pParser, LPCTSTR szCol[], int nCols)
+/*"insert into hcode(hcode,postcode,cityName) values('1894297', '716', 'ОЃжн');"*/
+char  g_expPreText[] = {("insert into hcode(hcode,postcode,cityName) values(\'")};
+INT InsertRowData(RPT_PARSER *pParser, LPCTSTR szCol,  int nCols)
 {
     // TODO: Add your control notification handler code here
     pParser->nCurWriteRow++;
@@ -111,19 +114,18 @@ INT InsertRowData(RPT_PARSER *pParser, LPCTSTR szCol[], int nCols)
                 TCHAR buff[9]; 
                 GetRangString(buff, 8, i, row);
                 range=pParser->ExpSheet.GetRange(COleVariant(buff),COleVariant(buff));
-                range.SetValue(COleVariant(szCol[i]));
+                range.SetValue(COleVariant(szCol));
             }
         }
         else
         {
-            char tmp[1024];
-            for( int i=0 ;i<nCols; i++)
-            {
-                DWORD dwNum  = ::WideCharToMultiByte(CP_ACP,0,szCol[i],-1,tmp,1024,0,0);
-                exp_f.Write(tmp, dwNum-1 );                
-                exp_f.Write( ",\t",1);
-            }
-            exp_f.Write( ("\r\n"),2);
+            exp_f.Write(g_expPreText, strlen(g_expPreText));
+
+            //char tmp[1024];
+            //DWORD dwNum  = ::WideCharToMultiByte(CP_ACP,0,szCol[i],-1,tmp,1024,0,0);
+            char tmps[1024];            
+            sprintf(tmps,("%S%03d\',\'%s\',\'%s\');\r\n"),szCol,nCols,pParser->pszInfo[2],pParser->pszInfo[1]);
+            exp_f.Write(tmps, strlen(tmps));          
         }
 
     }

@@ -26,6 +26,7 @@ typedef struct tag_column_idx_string
     LPCTSTR   strFlag;
 }COL_FLAG;
 
+
 typedef enum tag_porcess_status
 {
     UNINITIALIZE,      /*File Opened, read CONNECT_NAME*/ 
@@ -42,6 +43,9 @@ typedef struct  tag_report_parser
 {
     VOID *       handle_export;
     RPOC_STATE   cur_state;
+    RPOC_STATE   app_state;
+    TCHAR        chr_brk;
+
     
     DWORD        nToalCols;
     DWORD        nToalRows;
@@ -50,12 +54,14 @@ typedef struct  tag_report_parser
 
     DWORD        nExpRow;
     DWORD        nImportCols;
+    INT          ColNumberStart;
     INT          ColIndex[MAX_EXP_COL - MAX_COLLECTIONS];
 
     CStringArray strInfo;  //strInfo[MAX_COLLECTIONS];
     CString      strRptDir;
     CString      strExpFileName;
-    EXP_COLS     tblExpCols[MAX_EXP_COL];
+    LPCTSTR      ptrInfos[3];
+    char *       pszInfo[3];
 
 
     _Application objApp; 
@@ -99,8 +105,8 @@ public:
 };
 
 BOOL GetRangString(TCHAR * buff, int len, int cols, int rows);
-INT PrepareExportFile(RPT_PARSER *pParser, LPCTSTR szCol[], int cols);
-INT InsertRowData(RPT_PARSER *pParser, LPCTSTR szCol[], int cols);
+INT PrepareExportFile(RPT_PARSER *pParser, LPCTSTR szCol , int cols);
+INT InsertRowData(RPT_PARSER *pParser, LPCTSTR szCol , int cols);
 INT InsertRowData(RPT_PARSER *pParser, CStringArray &astr);
 void ExportDataDone(RPT_PARSER *pParser)    ;
 BOOL GetDefaultXlsFileName(LPCTSTR sDirName, CString& sExcelFile);

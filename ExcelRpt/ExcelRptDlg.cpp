@@ -127,7 +127,14 @@ RPOC_STATE OnIndexRow(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSE
             pParser->ColNumberStart = col;
             while(col <= num )
             {
-                str = pval[col++].bstrVal;
+                if( pval[col].vt == VT_BSTR)
+                    str = pval[col++].bstrVal;
+                else if( pval[col].vt == VT_INT )
+                    str.Format(_T("%d"),pval[col++].intVal);
+                else if( pval[col].vt == VT_R8)
+                    str.Format(_T("%4g"),pval[col++].dblVal);
+                else 
+                    throw 1;
                 str = str.Left(4);
                 pParser->strInfo.Add(str);
             }
@@ -167,12 +174,18 @@ RPOC_STATE OnInit(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * 
 int GetPartStr(CString &strCell, CString &part, RPT_PARSER * pParser)
 {
     //TCHAR chrbrk = 
-    int brk = strCell.Find(pParser->chr_brk);
-    if( brk != -1 )
+    if( !strCell.IsEmpty() ) 
     {
-        part = strCell.Left(brk);
-        strCell.Delete(0, brk+1);
-        return 1;
+        int brk = strCell.Find(pParser->chr_brk);
+        if( brk != -1 )
+        {
+            part = strCell.Left(brk);
+            strCell.Delete(0, brk+1);
+            return 1;
+        }
+        part = strCell;
+        strCell.Empty();
+        return 2;
     }
     return 0;
 }
@@ -181,18 +194,19 @@ int ProcParseCell( VARIANT * pval, int col, RPT_PARSER * pParser)
 {
     if( pval[col].vt == VT_BSTR)
     {
+        CString strPreText  = pParser->strInfo.GetAt(col - pParser->ColNumberStart);
         CString strpart;
-        CString str = //_T("280-289、301、311、321、331、650-653、655-656");//cnn //pval[col].bstrVal;
-        _T("402-403,406-407,472-473,477,484,487");//cm
+        CString str = pval[col].bstrVal;
+        //_T("402-403,406-407,472-473,477,484,487");//cm
         //_T("311-312、369、383-385、409、834");//ct
         while( GetPartStr(str, strpart, pParser) )
         {
             int begin, end = -1;
-            _stscanf(str,_T("%d-%d"),&begin, &end);
+            _stscanf(strpart,_T("%d-%d"),&begin, &end);
             if( end == -1) end = begin;
             while( begin <= end)
             {
-                
+                InsertRowData( pParser,strPreText, begin++);
             }
         }
     }    
@@ -201,6 +215,7 @@ int ProcParseCell( VARIANT * pval, int col, RPT_PARSER * pParser)
 RPOC_STATE ProcExpData(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARSER * pParser)
 {
     int col = 0;
+    char asctmp[3][256];
     for( int idx = 0; idx<3; idx++)
     {
         pParser->ptrInfos[idx] = _T("");
@@ -208,10 +223,12 @@ RPOC_STATE ProcExpData(VARIANT * pval, int num, LPCTSTR pstrKeyWords[], RPT_PARS
         if( pval[col].vt == VT_BSTR )
         {
             pParser->ptrInfos[idx] = pval[col].bstrVal;
+            WideCharToMultiByte(CP_OEMCP,0,pParser->ptrInfos[idx],-1,asctmp[idx],256,0,0);
+            pParser->pszInfo[idx] = &asctmp[idx][0];
         }
     }
 
-    for(col = pParser->ColNumberStart; col < num ; col++)
+    for(col = pParser->ColNumberStart; col <= num ; col++)
     {
         ProcParseCell(pval, col, pParser);
     }
@@ -375,9 +392,6 @@ BOOL ExcleRead( RPT_PARSER * pParser , LPCTSTR szExcleFileName, cbExcelRead pfnR
         ret_val =  FALSE;
     }
 
-    if( row != pParser->nCurWriteRow )
-        InsertRowData(pParser, NULL, 0);
-
     return ret_val;
 }
 
@@ -401,6 +415,8 @@ BOOL InitExcelApp( RPT_PARSER * pParser )
 
     pParser->nExpCols = sizeof(g_strExpColumns)/sizeof(LPCTSTR);
     pParser->nCurWriteRow = 0;
+
+    PrepareExportFile(pParser, NULL, 0 );
 
     return TRUE;
 
@@ -515,6 +531,7 @@ BOOL CExcelRptDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+    this->SetWindowText(_T("选择Excel文件夹"));
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -559,6 +576,7 @@ HCURSOR CExcelRptDlg::OnQueryDragIcon()
 #define S_OK  
 extern  int g_nExpFileType ;
 
+
 void CExcelRptDlg::OnBnClickedBtnOpendir()
 {
     this->UpdateData();
@@ -587,6 +605,8 @@ void CExcelRptDlg::OnBnClickedBtnOpendir()
         strfilt.Delete(strfilt.GetLength() -1, 1);
 
     CString strDir = strfilt;
+    this->SetWindowText(_T("处理中..."));
+    ProcessUIMsg();
 
 
     DWORD tick = ::GetTickCount();
@@ -598,16 +618,18 @@ void CExcelRptDlg::OnBnClickedBtnOpendir()
         RPT_PARSER  parser;
         COleVariant   VOptional((long)DISP_E_PARAMNOTFOUND,   VT_ERROR); 
         
+        parser.strRptDir  = strDir;
         InitExcelApp(&parser);
         
         BOOL bnext = TRUE;
         while( bnext )
         {
             CString strXls = strDir + _T("\\") + find.cFileName;
-            parser.strRptDir  = strDir;
+            this->GetDlgItem(IDC_TEXT_OUTPUT)->SetWindowText(find.cFileName);
+            ProcessUIMsg();
             TRACE(_T("%ws\n"), strXls);//这里是所有找到的文件名
             ExcleRead(&parser,strXls, OnReadRow);
-            bnext = FindNextFile(hfile, &find);        
+            bnext = FindNextFile(hfile, &find);      
         }
 
         if( parser.nCurWriteRow )
@@ -633,5 +655,18 @@ void CExcelRptDlg::OnBnClickedBtnOpendir()
     
     TRACE(_T("Time used: %d\n"), GetTickCount()-tick );
     g_nExpFileType = 1;
+    this->SetWindowText(_T("处理完成!"));
     this->UpdateData(false);
+}
+
+int CExcelRptDlg::ProcessUIMsg(void)
+{
+    _AFX_THREAD_STATE *pState = AfxGetThreadState();
+    ::GetMessage(&(pState->m_msgCur), NULL, NULL, NULL);
+    if (!AfxPreTranslateMessage(&(pState->m_msgCur)))
+    {
+        ::TranslateMessage(&(pState->m_msgCur));
+        ::DispatchMessage(&(pState->m_msgCur));
+    }
+    return 0;
 }

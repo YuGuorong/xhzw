@@ -34,4 +34,6 @@ public:
     CString m_strExpFile;
 public:
     CString m_expFIleName;
+public:
+    int ProcessUIMsg(void);
 };
